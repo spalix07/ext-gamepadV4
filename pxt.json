@@ -1,11 +1,10 @@
 {
     "name": "ext-gamepadv4",
-    "version": "0.0.0",
-    "description": "",
+    "version": "0.0.1",
+    "description": "Extension pour DFRobot GamePad V4.0 (micro:bit)",
+    "license": "MIT",
     "dependencies": {
         "core": "*",
-        "radio": "*",
-        "microphone": "*"
     },
     "files": [
         "README.md",
