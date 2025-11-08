@@ -1,4 +1,4 @@
-//% color=#EE8010 icon="\uf11b" block="DFRobot GamePad V4"
+//% color=#DD8020 icon="\uf11b" block="DFRobot GamePad V4"
 namespace gamepadV4 {
 
     export enum GamePadButton {
@@ -14,71 +14,98 @@ namespace gamepadV4 {
         E = 4,
         //% block="F"
         F = 5,
-        //% block="Z"
+        //% block="Z (joystick clic)"
         Z = 6
     }
 
-    // Brochages
-    const pinMap: DigitalPin[] = [
-        DigitalPin.P5,  // A
-        DigitalPin.P11, // B
-        DigitalPin.P13, // C
-        DigitalPin.P14, // D
-        DigitalPin.P15, // E
-        DigitalPin.P16, // F
-        DigitalPin.P8   // Z
-    ]
+    // broches (constantes littérales utilisées côté TS)
+    const PIN_A = DigitalPin.P5
+    const PIN_B = DigitalPin.P11
+    const PIN_C = DigitalPin.P13
+    const PIN_D = DigitalPin.P14
+    const PIN_E = DigitalPin.P15
+    const PIN_F = DigitalPin.P16
+    const PIN_Z = DigitalPin.P8
 
-    const pinAnalogX = AnalogPin.P1
-    const pinAnalogY = AnalogPin.P2
-    const pinVib = DigitalPin.P12
+    const PIN_X = AnalogPin.P1
+    const PIN_Y = AnalogPin.P2
+    const PIN_VIB = DigitalPin.P12
 
-    let buttonStates: boolean[] = [false,false,false,false,false,false,false]
+    // état cache local (mis à jour par le natif via events)
+    let buttonStates: boolean[] = [false, false, false, false, false, false, false]
+
+    // ------------------- SHIMS natifs -------------------
+    // initialise la gestion native (C++) des boutons (installe interruptions / handlers natifs)
+    //% shim=gamepad::nativeInit
+    function nativeInit(): void {
+        // shim: implementation en C++
+    }
+
+    // lit l'état logique d'un bouton depuis le natif (0/1)
+    //% shim=gamepad::nativeIsDown
+    function nativeIsDown(index: number): boolean {
+        return false
+    }
+
+    // demande au natif de forcer la remontée d'un event (utile pour test)
+    //% shim=gamepad::nativeForceEvent
+    function nativeForceEvent(index: number, down: boolean): void {
+    }
+
+    // ------------------- TS API -------------------
 
     /**
-     * Initialise le GamePad en utilisant pins.onPulsed()
+     * Initialise le GamePad (installe les handlers natifs)
      */
     //% block="initialiser le GamePad"
     export function init(): void {
-    // Neutralise les boutons internes du micro:bit
-    input.onButtonPressed(Button.A, function () {})
-    input.onButtonPressed(Button.B, function () {})
+        // config pull-up côté TS pour être sûr (natf fera aussi sa config)
+        pins.setPull(PIN_A, PinPullMode.PullUp)
+        pins.setPull(PIN_B, PinPullMode.PullUp)
+        pins.setPull(PIN_C, PinPullMode.PullUp)
+        pins.setPull(PIN_D, PinPullMode.PullUp)
+        pins.setPull(PIN_E, PinPullMode.PullUp)
+        pins.setPull(PIN_F, PinPullMode.PullUp)
+        pins.setPull(PIN_Z, PinPullMode.PullUp)
 
-    // Pull-up sur toutes les broches utilisées
-    for (let i = 0; i < pinMap.length; i++) {
-        pins.setPull(pinMap[i], PinPullMode.PullUp)
+        // appelle le natif qui installera les interruptions "hardware-safe"
+        nativeInit()
+
+        // démarre un thread TS léger pour synchroniser l'état local (optionnel)
+        control.inBackground(() => {
+            while (true) {
+                for (let i = 0; i <= 6; i++) {
+                    const s = nativeIsDown(i)
+                    // si changement d'état on lève les events TS (compat)
+                    if (s != buttonStates[i]) {
+                        buttonStates[i] = s
+                        if (s) control.raiseEvent(i, EventBusValue.MICROBIT_BUTTON_EVT_DOWN)
+                        else control.raiseEvent(i, EventBusValue.MICROBIT_BUTTON_EVT_UP)
+                    }
+                }
+                basic.pause(50)
+            }
+        })
     }
 
-    // Configurer les interruptions pour chaque bouton explicitement
-    setupPinInterrupt(DigitalPin.P5, 0)
-    setupPinInterrupt(DigitalPin.P11, 1)
-    setupPinInterrupt(DigitalPin.P13, 2)
-    setupPinInterrupt(DigitalPin.P14, 3)
-    setupPinInterrupt(DigitalPin.P15, 4)
-    setupPinInterrupt(DigitalPin.P16, 5)
-}
+    //% block="bouton %btn appuyé ?"
+    export function isButtonDown(btn: GamePadButton): boolean {
+        return buttonStates[<number>btn]
+    }
 
-// Fonction utilitaire pour simplifier les appels
-function setupPinInterrupt(pin: DigitalPin, index: number) {
-    pins.onPulsed(pin, PulseValue.Low, () => {
-        if (!buttonStates[index]) {
-            buttonStates[index] = true
-            control.raiseEvent(index, EventBusValue.MICROBIT_BUTTON_EVT_DOWN)
-        }
-    })
-    pins.onPulsed(pin, PulseValue.High, () => {
-        if (buttonStates[index]) {
-            buttonStates[index] = false
-            control.raiseEvent(index, EventBusValue.MICROBIT_BUTTON_EVT_UP)
-        }
-    })
-}
+    //% block="quand bouton %btn appuyé"
+    export function onButtonPressed(btn: GamePadButton, handler: () => void): void {
+        control.onEvent(<number>btn, EventBusValue.MICROBIT_BUTTON_EVT_DOWN, handler)
+    }
 
+    //% block="quand bouton %btn relâché"
+    export function onButtonReleased(btn: GamePadButton, handler: () => void): void {
+        control.onEvent(<number>btn, EventBusValue.MICROBIT_BUTTON_EVT_UP, handler)
+    }
 
-    // --- Axes ---
     //% block="axe X"
     export function axeX(): number {
-        let raw = pins.analogReadPin(pinAnalogX)
+        let raw = pins.analogReadPin(PIN_X)
         let value = (raw - 512) * 100 / 512
         if (value > 100) value = 100
         if (value < -100) value = -100
@@ -87,7 +114,7 @@ function setupPinInterrupt(pin: DigitalPin, index: number) {
 
     //% block="axe Y"
     export function axeY(): number {
-        let raw = pins.analogReadPin(pinAnalogY)
+        let raw = pins.analogReadPin(PIN_Y)
         let value = (raw - 512) * 100 / 512
         if (value > 100) value = 100
         if (value < -100) value = -100
@@ -96,32 +123,13 @@ function setupPinInterrupt(pin: DigitalPin, index: number) {
 
     //% block="joystick pressé (Z)"
     export function axeZ(): boolean {
-        return buttonStates[6]
+        return isButtonDown(GamePadButton.Z)
     }
 
-    // --- Boutons ---
-    //% block="bouton %btn appuyé"
-    export function isButtonDown(btn: GamePadButton): boolean {
-        return buttonStates[<number>btn]
-    }
-
-    //% block="lorsque bouton %btn appuyé"
-    export function onButtonPressed(btn: GamePadButton, handler: () => void): void {
-        control.onEvent(<number>btn, EventBusValue.MICROBIT_BUTTON_EVT_DOWN, handler)
-    }
-
-    //% block="lorsque bouton %btn relâché"
-    export function onButtonReleased(btn: GamePadButton, handler: () => void): void {
-        control.onEvent(<number>btn, EventBusValue.MICROBIT_BUTTON_EVT_UP, handler)
-    }
-
-    // --- Vibreur et buzzer ---
     //% block="vibreur pendant %duration|ms"
     export function vibrate(duration: number): void {
-        pins.digitalWritePin(pinVib, 1)
+        pins.digitalWritePin(PIN_VIB, 1)
         basic.pause(duration)
-        pins.digitalWritePin(pinVib, 0)
+        pins.digitalWritePin(PIN_VIB, 0)
     }
-
-  
 }
