@@ -7,7 +7,9 @@
         "core": "*"
     },
     "files": [
-        "main.ts"
+    "README.md",
+    "main.ts",
+    "gamepad.cpp"
     ],
     "testFiles": [
         "test.ts"
