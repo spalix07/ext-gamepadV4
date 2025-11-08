@@ -35,8 +35,8 @@ namespace gamepadV4 {
     //% block="initialiser le GamePad"
     export function init(): void {
         pins.setPull(PIN_Z, PinPullMode.PullUp)
-        pins.setPull(PIN_BTN_A, PinPullMode.PullUp)
-        pins.setPull(PIN_BTN_B, PinPullMode.PullUp)
+        //pins.setPull(PIN_BTN_A, PinPullMode.PullUp)
+        //pins.setPull(PIN_BTN_B, PinPullMode.PullUp)
         pins.setPull(PIN_BTN_C, PinPullMode.PullUp)
         pins.setPull(PIN_BTN_D, PinPullMode.PullUp)
         pins.setPull(PIN_BTN_E, PinPullMode.PullUp)
@@ -54,8 +54,8 @@ namespace gamepadV4 {
         switch (btn) {
 //            case GamePadButton.A: return input.buttonIsPressed(Button.A)
 //            case GamePadButton.B: return input.buttonIsPressed(Button.B)
-            case GamePadButton.A: return pins.digitalReadPin(PIN_BTN_A) == 0
-            case GamePadButton.B: return pins.digitalReadPin(PIN_BTN_B) == 0
+//            case GamePadButton.A: return pins.digitalReadPin(PIN_BTN_A) == 0
+//            case GamePadButton.B: return pins.digitalReadPin(PIN_BTN_B) == 0
             case GamePadButton.C: return pins.digitalReadPin(PIN_BTN_C) == 0
             case GamePadButton.D: return pins.digitalReadPin(PIN_BTN_D) == 0
             case GamePadButton.E: return pins.digitalReadPin(PIN_BTN_E) == 0
