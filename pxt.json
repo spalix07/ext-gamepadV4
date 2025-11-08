@@ -4,11 +4,9 @@
     "description": "Extension pour DFRobot GamePad V4.0 (micro:bit)",
     "license": "MIT",
     "dependencies": {
-        "core": "*",
+        "core": "*"
     },
     "files": [
-        "README.md",
-        "main.blocks",
         "main.ts"
     ],
     "testFiles": [
