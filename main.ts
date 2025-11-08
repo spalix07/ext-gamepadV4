@@ -1,4 +1,4 @@
-//% color=#CC6000 icon="\uf11b" block="DFRobot GamePad V4"
+//% color=#DD7000 icon="\uf11b" block="DFRobot GamePad V4"
 namespace gamepadV4 {
 
     export enum GamePadButton {
@@ -14,7 +14,7 @@ namespace gamepadV4 {
         E = 4,
         //% block="F"
         F = 5,
-        //% block="Z (joystick clic)"
+        //% block="Z"
         Z = 6
     }
 
@@ -48,13 +48,13 @@ namespace gamepadV4 {
         // Configuration des interruptions pour chaque bouton
         for (let i = 0; i < pinMap.length; i++) {
             const pin = pinMap[i]
-            pins.onPulsed(pin, PulseValue.Low, () => {
+            pins.onPulsed(pin, pins.PulseValue.Low, () => {
                 if (!buttonStates[i]) {
                     buttonStates[i] = true
                     control.raiseEvent(i, EventBusValue.MICROBIT_BUTTON_EVT_DOWN)
                 }
             })
-            pins.onPulsed(pin, PulseValue.High, () => {
+            pins.onPulsed(pin, pins.PulseValue.High, () => {
                 if (buttonStates[i]) {
                     buttonStates[i] = false
                     control.raiseEvent(i, EventBusValue.MICROBIT_BUTTON_EVT_UP)
