@@ -1,5 +1,5 @@
 
-//% color=#AAAAAA icon="\uf11b" block="DFRobot GamePad V4"
+//% color=#888888 icon="\uf11b" block="DFRobot GamePad V4"
 namespace gamepadV4 {
     export enum GamePadButton {
         //% block="A"
