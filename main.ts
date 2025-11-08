@@ -1,5 +1,5 @@
 
-//% color=#888888 icon="\uf11b" block="DFRobot GamePad V4"
+//% color=#FF8000 icon="\uf11b" block="DFRobot GamePad V4"
 namespace gamepadV4 {
     export enum GamePadButton {
         //% block="A"
@@ -100,12 +100,12 @@ namespace gamepadV4 {
         return readButton(btn)
     }
 
-    //% block="quand bouton %btn appuyé"
+    //% block="lorsque bouton %btn appuyé"
     export function onButtonPressed(btn: GamePadButton, handler: () => void): void {
         control.onEvent(<number>btn, EventBusValue.MICROBIT_BUTTON_EVT_DOWN, handler)
     }
 
-    //% block="quand bouton %btn relâché"
+    //% block="lorsque bouton %btn relâché"
     export function onButtonReleased(btn: GamePadButton, handler: () => void): void {
         control.onEvent(<number>btn, EventBusValue.MICROBIT_BUTTON_EVT_UP, handler)
     }
@@ -117,12 +117,5 @@ namespace gamepadV4 {
         pins.digitalWritePin(PIN_VIB, 0)
     }
 
-    //% block="jouer fréquence %freq Hz pendant %duration ms"
-    export function buzzerPlayTone(freq: number, duration: number): void {
-        pins.analogWritePin(PIN_BUZZER, 512)
-        pins.analogSetPeriod(PIN_BUZZER, 1000000 / freq)
-        basic.pause(duration)
-        pins.analogWritePin(PIN_BUZZER, 0)
-    }
 }
 
