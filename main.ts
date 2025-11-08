@@ -1,6 +1,6 @@
-
-//% color=#FF8000 icon="\uf11b" block="DFRobot GamePad V4"
+//% color=#CC6000 icon="\uf11b" block="DFRobot GamePad V4"
 namespace gamepadV4 {
+
     export enum GamePadButton {
         //% block="A"
         A = 0,
@@ -14,72 +14,59 @@ namespace gamepadV4 {
         E = 4,
         //% block="F"
         F = 5,
-        //% block="Z"
+        //% block="Z (joystick clic)"
         Z = 6
     }
 
-    const PIN_X = AnalogPin.P1
-    const PIN_Y = AnalogPin.P2
-    const PIN_Z = DigitalPin.P8
-    const PIN_VIB = DigitalPin.P12
-    const PIN_BTN_A = DigitalPin.P5
-    const PIN_BTN_B = DigitalPin.P11
-    const PIN_BTN_C = DigitalPin.P13
-    const PIN_BTN_D = DigitalPin.P14
-    const PIN_BTN_E = DigitalPin.P15
-    const PIN_BTN_F = DigitalPin.P16
+    // Brochages
+    const pinMap: DigitalPin[] = [
+        DigitalPin.P5,  // A
+        DigitalPin.P11, // B
+        DigitalPin.P13, // C
+        DigitalPin.P14, // D
+        DigitalPin.P15, // E
+        DigitalPin.P16, // F
+        DigitalPin.P8   // Z
+    ]
 
-    let lastStates: boolean[] = [false, false, false, false, false, false, false]
+    const pinAnalogX = AnalogPin.P1
+    const pinAnalogY = AnalogPin.P2
+    const pinVib = DigitalPin.P12
 
-    // Initialisation
+    let buttonStates: boolean[] = [false,false,false,false,false,false,false]
+
+    /**
+     * Initialise le GamePad en utilisant pins.onPulsed()
+     */
     //% block="initialiser le GamePad"
     export function init(): void {
-        pins.setPull(PIN_Z, PinPullMode.PullUp)
-        //pins.setPull(PIN_BTN_A, PinPullMode.PullUp)
-        //pins.setPull(PIN_BTN_B, PinPullMode.PullUp)
-        pins.setPull(PIN_BTN_C, PinPullMode.PullUp)
-        pins.setPull(PIN_BTN_D, PinPullMode.PullUp)
-        pins.setPull(PIN_BTN_E, PinPullMode.PullUp)
-        pins.setPull(PIN_BTN_F, PinPullMode.PullUp)
-
-        control.inBackground(() => {
-            while (true) {
-                checkButtons()
-                basic.pause(20)
-            }
-        })
-    }
-
-    function readButton(btn: GamePadButton): boolean {
-        switch (btn) {
-//            case GamePadButton.A: return input.buttonIsPressed(Button.A)
-//            case GamePadButton.B: return input.buttonIsPressed(Button.B)
-//            case GamePadButton.A: return pins.digitalReadPin(PIN_BTN_A) == 0
-//            case GamePadButton.B: return pins.digitalReadPin(PIN_BTN_B) == 0
-            case GamePadButton.C: return pins.digitalReadPin(PIN_BTN_C) == 0
-            case GamePadButton.D: return pins.digitalReadPin(PIN_BTN_D) == 0
-            case GamePadButton.E: return pins.digitalReadPin(PIN_BTN_E) == 0
-            case GamePadButton.F: return pins.digitalReadPin(PIN_BTN_F) == 0
-            case GamePadButton.Z: return pins.digitalReadPin(PIN_Z) == 0
+        // Pull-ups pour tous les boutons
+        for (let i = 0; i < pinMap.length; i++) {
+            pins.setPull(pinMap[i], PinPullMode.PullUp)
         }
-        return false
-    }
 
-    function checkButtons() {
-        for (let i = 0; i <= 6; i++) {
-            const current = readButton(i)
-            if (current && !lastStates[i]) {
-                control.raiseEvent(i, EventBusValue.MICROBIT_BUTTON_EVT_DOWN)
-            } else if (!current && lastStates[i]) {
-                control.raiseEvent(i, EventBusValue.MICROBIT_BUTTON_EVT_UP)
-            }
-            lastStates[i] = current
+        // Configuration des interruptions pour chaque bouton
+        for (let i = 0; i < pinMap.length; i++) {
+            const pin = pinMap[i]
+            pins.onPulsed(pin, PulseValue.Low, () => {
+                if (!buttonStates[i]) {
+                    buttonStates[i] = true
+                    control.raiseEvent(i, EventBusValue.MICROBIT_BUTTON_EVT_DOWN)
+                }
+            })
+            pins.onPulsed(pin, PulseValue.High, () => {
+                if (buttonStates[i]) {
+                    buttonStates[i] = false
+                    control.raiseEvent(i, EventBusValue.MICROBIT_BUTTON_EVT_UP)
+                }
+            })
         }
     }
 
+    // --- Axes ---
     //% block="axe X"
     export function axeX(): number {
-        let raw = pins.analogReadPin(PIN_X)
+        let raw = pins.analogReadPin(pinAnalogX)
         let value = (raw - 512) * 100 / 512
         if (value > 100) value = 100
         if (value < -100) value = -100
@@ -88,21 +75,22 @@ namespace gamepadV4 {
 
     //% block="axe Y"
     export function axeY(): number {
-        let raw = pins.analogReadPin(PIN_Y)
+        let raw = pins.analogReadPin(pinAnalogY)
         let value = (raw - 512) * 100 / 512
         if (value > 100) value = 100
         if (value < -100) value = -100
         return Math.round(value)
     }
 
-    //% block="axe Z (clic)"
+    //% block="joystick pressé (Z)"
     export function axeZ(): boolean {
-        return pins.digitalReadPin(PIN_Z) == 0
+        return buttonStates[6]
     }
 
-    //% block="bouton %btn appuyé ?"
+    // --- Boutons ---
+    //% block="bouton %btn appuyé"
     export function isButtonDown(btn: GamePadButton): boolean {
-        return readButton(btn)
+        return buttonStates[<number>btn]
     }
 
     //% block="lorsque bouton %btn appuyé"
@@ -115,12 +103,13 @@ namespace gamepadV4 {
         control.onEvent(<number>btn, EventBusValue.MICROBIT_BUTTON_EVT_UP, handler)
     }
 
-    //% block="vibreur pendant %duration ms"
+    // --- Vibreur et buzzer ---
+    //% block="vibreur pendant %duration|ms"
     export function vibrate(duration: number): void {
-        pins.digitalWritePin(PIN_VIB, 1)
+        pins.digitalWritePin(pinVib, 1)
         basic.pause(duration)
-        pins.digitalWritePin(PIN_VIB, 0)
+        pins.digitalWritePin(pinVib, 0)
     }
 
+  
 }
-
