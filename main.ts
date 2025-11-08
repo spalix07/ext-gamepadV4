@@ -1,4 +1,4 @@
-//% color=#DD7000 icon="\uf11b" block="DFRobot GamePad V4"
+//% color=#EE8010 icon="\uf11b" block="DFRobot GamePad V4"
 namespace gamepadV4 {
 
     export enum GamePadButton {
@@ -40,30 +40,40 @@ namespace gamepadV4 {
      */
     //% block="initialiser le GamePad"
     export function init(): void {
-        // Pull-ups pour tous les boutons
-        input.onButtonPressed(Button.A, function() {}) // neutralise le bouton interne A
-        input.onButtonPressed(Button.B, function() {}) // neutralise le bouton interne B
-        for (let i = 0; i < pinMap.length; i++) {
-            pins.setPull(pinMap[i], PinPullMode.PullUp)
-        }
+    // Neutralise les boutons internes du micro:bit
+    input.onButtonPressed(Button.A, function () {})
+    input.onButtonPressed(Button.B, function () {})
 
-        // Configuration des interruptions pour chaque bouton
-        for (let i = 0; i < pinMap.length; i++) {
-            const pin = pinMap[i]
-            pins.onPulsed(pin, pins.PulseValue.Low, () => {
-                if (!buttonStates[i]) {
-                    buttonStates[i] = true
-                    control.raiseEvent(i, EventBusValue.MICROBIT_BUTTON_EVT_DOWN)
-                }
-            })
-            pins.onPulsed(pin, pins.PulseValue.High, () => {
-                if (buttonStates[i]) {
-                    buttonStates[i] = false
-                    control.raiseEvent(i, EventBusValue.MICROBIT_BUTTON_EVT_UP)
-                }
-            })
-        }
+    // Pull-up sur toutes les broches utilisées
+    for (let i = 0; i < pinMap.length; i++) {
+        pins.setPull(pinMap[i], PinPullMode.PullUp)
     }
+
+    // Configurer les interruptions pour chaque bouton explicitement
+    setupPinInterrupt(DigitalPin.P5, 0)
+    setupPinInterrupt(DigitalPin.P11, 1)
+    setupPinInterrupt(DigitalPin.P13, 2)
+    setupPinInterrupt(DigitalPin.P14, 3)
+    setupPinInterrupt(DigitalPin.P15, 4)
+    setupPinInterrupt(DigitalPin.P16, 5)
+}
+
+// Fonction utilitaire pour simplifier les appels
+function setupPinInterrupt(pin: DigitalPin, index: number) {
+    pins.onPulsed(pin, pins.PulseValue.Low, () => {
+        if (!buttonStates[index]) {
+            buttonStates[index] = true
+            control.raiseEvent(index, EventBusValue.MICROBIT_BUTTON_EVT_DOWN)
+        }
+    })
+    pins.onPulsed(pin, pins.PulseValue.High, () => {
+        if (buttonStates[index]) {
+            buttonStates[index] = false
+            control.raiseEvent(index, EventBusValue.MICROBIT_BUTTON_EVT_UP)
+        }
+    })
+}
+
 
     // --- Axes ---
     //% block="axe X"
