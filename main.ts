@@ -41,6 +41,8 @@ namespace gamepadV4 {
     //% block="initialiser le GamePad"
     export function init(): void {
         // Pull-ups pour tous les boutons
+        input.onButtonPressed(Button.A, function() {}) // neutralise le bouton interne A
+        input.onButtonPressed(Button.B, function() {}) // neutralise le bouton interne B
         for (let i = 0; i < pinMap.length; i++) {
             pins.setPull(pinMap[i], PinPullMode.PullUp)
         }
