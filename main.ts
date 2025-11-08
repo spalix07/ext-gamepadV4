@@ -60,13 +60,13 @@ namespace gamepadV4 {
 
 // Fonction utilitaire pour simplifier les appels
 function setupPinInterrupt(pin: DigitalPin, index: number) {
-    pins.onPulsed(pin, pins.PulseValue.Low, () => {
+    pins.onPulsed(pin, PulseValue.Low, () => {
         if (!buttonStates[index]) {
             buttonStates[index] = true
             control.raiseEvent(index, EventBusValue.MICROBIT_BUTTON_EVT_DOWN)
         }
     })
-    pins.onPulsed(pin, pins.PulseValue.High, () => {
+    pins.onPulsed(pin, PulseValue.High, () => {
         if (buttonStates[index]) {
             buttonStates[index] = false
             control.raiseEvent(index, EventBusValue.MICROBIT_BUTTON_EVT_UP)
