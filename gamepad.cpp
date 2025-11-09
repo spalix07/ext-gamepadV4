@@ -1,56 +1,68 @@
 #include "pxt.h"
-using namespace pxt;
+
+#if MICROBIT_CODAL
+#include "Pin.h"
+#define PinCompat codal::Pin
+#undef Button
+#include "MicroBitButton.h"
+#else
+#define PinCompat MicroBitPin
+#endif
+
+namespace pxt {
+    MicroBitPin *getPin(int id);
+}
 
 namespace gamepad {
 
-MicroBitPin* buttonPins[] = {
-    pxt::lookupPin(5),   // A
-    pxt::lookupPin(11),  // B
-    pxt::lookupPin(8),   // C
-    pxt::lookupPin(13),  // D
-    pxt::lookupPin(14),  // E
-    pxt::lookupPin(15),  // F
-    pxt::lookupPin(16)   // Z
-};
+#if MICROBIT_CODAL
+    using codal::Button;
+#else
+    using ::MicroBitButton;
+#endif
 
-MicroBitPin* vibPin = pxt::lookupPin(12);
-MicroBitPin* joyX   = pxt::lookupPin(1);
-MicroBitPin* joyY   = pxt::lookupPin(2);
+// --- Définition des boutons physiques du gamepad ---
+#define BUTTON_A_PIN MICROBIT_ID_IO_P5
+#define BUTTON_B_PIN MICROBIT_ID_IO_P11
+#define BUTTON_X_PIN MICROBIT_ID_IO_P15
+#define BUTTON_Y_PIN MICROBIT_ID_IO_P16
+#define BUTTON_Z_PIN MICROBIT_ID_IO_P8  // Exemple : à adapter selon ton câblage
 
-const int baseEvent = 5200;
+// Pointeurs vers les objets boutons
+MicroBitButton *buttonA = nullptr;
+MicroBitButton *buttonB = nullptr;
+MicroBitButton *buttonX = nullptr;
+MicroBitButton *buttonY = nullptr;
+MicroBitButton *buttonZ = nullptr;
 
-// --- Initialisation ---
+// --- Initialisation du Gamepad ---
 void init() {
-    for (int i = 0; i < 7; i++) {
-        if (buttonPins[i]) {
-            buttonPins[i]->setPull(PullUp);
-            buttonPins[i]->eventOn(MICROBIT_PIN_EVENT_ON_PULSE);
-            buttonPins[i]->onPulsed(HIGH, create_fiber([](int i){
-                MicroBitEvent(baseEvent + i, MICROBIT_BUTTON_EVT_UP);
-            }, i));
-            buttonPins[i]->onPulsed(LOW, create_fiber([](int i){
-                MicroBitEvent(baseEvent + i, MICROBIT_BUTTON_EVT_DOWN);
-            }, i));
-        }
-    }
+#if MICROBIT_CODAL
+    buttonA = new MicroBitButton(*pxt::getPin(BUTTON_A_PIN), BUTTON_A_PIN, MICROBIT_BUTTON_ALL_EVENTS);
+    buttonB = new MicroBitButton(*pxt::getPin(BUTTON_B_PIN), BUTTON_B_PIN, MICROBIT_BUTTON_ALL_EVENTS);
+    buttonX = new MicroBitButton(*pxt::getPin(BUTTON_X_PIN), BUTTON_X_PIN, MICROBIT_BUTTON_ALL_EVENTS);
+    buttonY = new MicroBitButton(*pxt::getPin(BUTTON_Y_PIN), BUTTON_Y_PIN, MICROBIT_BUTTON_ALL_EVENTS);
+    buttonZ = new MicroBitButton(*pxt::getPin(BUTTON_Z_PIN), BUTTON_Z_PIN, MICROBIT_BUTTON_ALL_EVENTS);
+#else
+    buttonA = new MicroBitButton((PinName)pxt::getPin(BUTTON_A_PIN)->name, BUTTON_A_PIN, MICROBIT_BUTTON_ALL_EVENTS, PinMode::PullUp);
+    buttonB = new MicroBitButton((PinName)pxt::getPin(BUTTON_B_PIN)->name, BUTTON_B_PIN, MICROBIT_BUTTON_ALL_EVENTS, PinMode::PullUp);
+    buttonX = new MicroBitButton((PinName)pxt::getPin(BUTTON_X_PIN)->name, BUTTON_X_PIN, MICROBIT_BUTTON_ALL_EVENTS, PinMode::PullUp);
+    buttonY = new MicroBitButton((PinName)pxt::getPin(BUTTON_Y_PIN)->name, BUTTON_Y_PIN, MICROBIT_BUTTON_ALL_EVENTS, PinMode::PullUp);
+    buttonZ = new MicroBitButton((PinName)pxt::getPin(BUTTON_Z_PIN)->name, BUTTON_Z_PIN, MICROBIT_BUTTON_ALL_EVENTS, PinMode::PullUp);
+#endif
 }
 
-// --- Lecture du joystick ---
-int readJoystick(int axis) {
-    MicroBitPin* pin = (axis == 0) ? joyX : joyY;
-    int raw = pin->getAnalogValue();
-    int mapped = (raw - 512) * 100 / 512;
-    if (mapped > 100) mapped = 100;
-    if (mapped < -100) mapped = -100;
-    return mapped;
+// --- Fonctions de lecture d'état ---
+bool isPressedA() { return buttonA && buttonA->isPressed(); }
+bool isPressedB() { return buttonB && buttonB->isPressed(); }
+bool isPressedX() { return buttonX && buttonX->isPressed(); }
+bool isPressedY() { return buttonY && buttonY->isPressed(); }
+bool isPressedZ() { return buttonZ && buttonZ->isPressed(); }
+
+// --- Accès pour MakeCode (interface TS) ---
 }
 
-// --- Contrôle du vibreur ---
-void vibrate(int ms) {
-    if (!vibPin) return;
-    vibPin->setDigitalValue(1);
-    fiber_sleep(ms);
-    vibPin->setDigitalValue(0);
+// namespace MakeCode exposé à TS
+namespace pxtrt {
+    using namespace gamepad;
 }
-
-} // namespace gamepad
