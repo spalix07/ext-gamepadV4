@@ -1,11 +1,20 @@
 {
     "name": "gamepad",
-    "description": "Extension de gestion du gamepad micro:bit sur P5, P11, P15, P16, P8",
+    "description": "Driver for custom gamepad with extra button Z",
     "files": [
         "gamepad.ts",
         "gamepad.cpp"
     ],
+    "public": true,
     "dependencies": {
         "core": "*"
+    ],
+    "testFiles": [],
+    "yotta": {},
+    "license": "MIT",
+    "simulator": {
+        "files": [
+            "sim/gamepad.ts"
+        ]
     }
 }
