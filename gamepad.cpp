@@ -1,70 +1,56 @@
 #include "pxt.h"
 using namespace pxt;
 
-// namespace correspondant à "gamepad" dans les shims TypeScript
 namespace gamepad {
 
-    // tableau des broches utilisées pour les boutons
-    static const PinName btnPins[] = {
-        MICROBIT_ID_IO_P5,   // A
-        MICROBIT_ID_IO_P11,  // B
-        MICROBIT_ID_IO_P13,  // C
-        MICROBIT_ID_IO_P14,  // D
-        MICROBIT_ID_IO_P15,  // E
-        MICROBIT_ID_IO_P16,  // F
-        MICROBIT_ID_IO_P8    // Z
-    };
+MicroBitPin* buttonPins[] = {
+    pxt::lookupPin(5),   // A
+    pxt::lookupPin(11),  // B
+    pxt::lookupPin(8),   // C
+    pxt::lookupPin(13),  // D
+    pxt::lookupPin(14),  // E
+    pxt::lookupPin(15),  // F
+    pxt::lookupPin(16)   // Z
+};
 
-    static MicroBitPin* pinsArr[ARRAYSIZE(btnPins)] = { nullptr };
-    static bool btnState[ARRAYSIZE(btnPins)] = { false };
+MicroBitPin* vibPin = pxt::lookupPin(12);
+MicroBitPin* joyX   = pxt::lookupPin(1);
+MicroBitPin* joyY   = pxt::lookupPin(2);
 
-    /**
-     * Lecture directe de l'état logique d'un bouton
-     */
-    //%
-    bool nativeIsDown(int index) {
-        if (index < 0 || index >= (int)ARRAYSIZE(pinsArr)) return false;
-        auto p = pinsArr[index];
-        if (!p) return false;
-        return p->getDigitalValue() == 0; // actif bas
-    }
+const int baseEvent = 5200;
 
-    /**
-     * Forçage d'un événement (utilisé par fallback TS)
-     */
-    //%
-    void nativeForceEvent(int index, bool down) {
-        if (index < 0 || index >= (int)ARRAYSIZE(pinsArr)) return;
-        MicroBitEvent ev(index, down ? MICROBIT_BUTTON_EVT_DOWN : MICROBIT_BUTTON_EVT_UP);
-    }
-
-    /**
-     * Initialisation native : configure les broches et interruptions
-     */
-    //%
-    void nativeInit() {
-        for (int i = 0; i < (int)ARRAYSIZE(btnPins); ++i) {
-            PinName name = btnPins[i];
-            auto p = LOOKUP_PIN(name);
-            if (!p) continue;
-            pinsArr[i] = p;
-            p->setPull(PullUp);
-            btnState[i] = (p->getDigitalValue() == 0);
-
-            // attache une interruption sur changement d'état
-            p->eventOn(DEVICE_PIN_EVENT_ON_EDGE);
-            p->onEvent(MICROBIT_PIN_EVT_RISE, [i](MicroBitEvent) {
-                if (btnState[i]) {
-                    btnState[i] = false;
-                    MicroBitEvent ev(i, MICROBIT_BUTTON_EVT_UP);
-                }
-            });
-            p->onEvent(MICROBIT_PIN_EVT_FALL, [i](MicroBitEvent) {
-                if (!btnState[i]) {
-                    btnState[i] = true;
-                    MicroBitEvent ev(i, MICROBIT_BUTTON_EVT_DOWN);
-                }
-            });
+// --- Initialisation ---
+void init() {
+    for (int i = 0; i < 7; i++) {
+        if (buttonPins[i]) {
+            buttonPins[i]->setPull(PullUp);
+            buttonPins[i]->eventOn(MICROBIT_PIN_EVENT_ON_PULSE);
+            buttonPins[i]->onPulsed(HIGH, create_fiber([](int i){
+                MicroBitEvent(baseEvent + i, MICROBIT_BUTTON_EVT_UP);
+            }, i));
+            buttonPins[i]->onPulsed(LOW, create_fiber([](int i){
+                MicroBitEvent(baseEvent + i, MICROBIT_BUTTON_EVT_DOWN);
+            }, i));
         }
     }
 }
+
+// --- Lecture du joystick ---
+int readJoystick(int axis) {
+    MicroBitPin* pin = (axis == 0) ? joyX : joyY;
+    int raw = pin->getAnalogValue();
+    int mapped = (raw - 512) * 100 / 512;
+    if (mapped > 100) mapped = 100;
+    if (mapped < -100) mapped = -100;
+    return mapped;
+}
+
+// --- Contrôle du vibreur ---
+void vibrate(int ms) {
+    if (!vibPin) return;
+    vibPin->setDigitalValue(1);
+    fiber_sleep(ms);
+    vibPin->setDigitalValue(0);
+}
+
+} // namespace gamepad
