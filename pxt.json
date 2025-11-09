@@ -1,24 +1,11 @@
 {
-    "name": "gamepadV4",
-    "version": "0.1.0",
-    "description": "Extension native pour DFRobot GamePad V4.0 — gestion matérielle des boutons, joystick et vibreur",
-    "license": "MIT",
-    "dependencies": {
-        "core": "*"
-    },
+    "name": "gamepad",
+    "description": "Extension de gestion du gamepad micro:bit sur P5, P11, P15, P16, P8",
     "files": [
         "gamepad.ts",
-        "gamepad.cpp",
-        "README.md"
+        "gamepad.cpp"
     ],
-    "testFiles": [],
-    "public": true,
-    "targetVersions": {
-        "target": "8.0.18",
-        "targetId": "microbit"
-    },
-    "supportedTargets": [
-        "microbit"
-    ],
-    "preferredEditor": "blocksprj"
+    "dependencies": {
+        "core": "*"
+    }
 }
