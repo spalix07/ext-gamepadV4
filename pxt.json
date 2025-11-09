@@ -1,19 +1,17 @@
 {
-    "name": "ext-gamepadv4",
-    "version": "0.0.1",
-    "description": "Extension pour DFRobot GamePad V4.0 (micro:bit)",
+    "name": "gamepadV4",
+    "version": "0.1.0",
+    "description": "Extension native pour DFRobot GamePad V4.0 — gestion matérielle des boutons, joystick et vibreur",
     "license": "MIT",
     "dependencies": {
         "core": "*"
     },
     "files": [
-    "README.md",
-    "main.ts",
-    "gamepad.cpp"
+        "gamepad.ts",
+        "gamepad.cpp",
+        "README.md"
     ],
-    "testFiles": [
-        "test.ts"
-    ],
+    "testFiles": [],
     "public": true,
     "targetVersions": {
         "target": "8.0.18",
