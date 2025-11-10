@@ -1,49 +1,25 @@
-// gamepad.ts
-//% color=#00AAFF weight=90 icon="\uf11b"
-//% block="Gamepad"
+//% color=#EE8010 icon="\uf11b" block="GamePad"
 namespace gamepad {
-    //% block="initialiser le gamepad"
-    export function init(): void {
-        gamepad_native_init()
+    //% block="lire la broche %pin"
+    export function digitalReadPin(pin: DigitalPin): number {
+        return GAMEPAD_digitalReadPin(pin)
     }
 
-    // --- Fonctions exposées ---
-    //% block="bouton A appuyé"
-    export function isPressedA(): boolean {
-        return gamepad_native_isPressedA()
+    //% block="définir la résistance de tirage de %pin sur %pull"
+    export function setPull(pin: DigitalPin, pull: PinPullMode): void {
+        GAMEPAD_setPull(pin, pull)
     }
 
-    //% block="bouton B appuyé"
-    export function isPressedB(): boolean {
-        return gamepad_native_isPressedB()
+    //% block="lorsque %pin reçoit une impulsion %pulse"
+    export function onPulsed(pin: DigitalPin, pulse: PulseValue, handler: () => void): void {
+        GAMEPAD_onPulsed(pin, pulse, handler)
     }
-
-    //% block="bouton X appuyé"
-    export function isPressedX(): boolean {
-        return gamepad_native_isPressedX()
-    }
-
-    //% block="bouton Y appuyé"
-    export function isPressedY(): boolean {
-        return gamepad_native_isPressedY()
-    }
-
-    //% block="bouton Z appuyé"
-    export function isPressedZ(): boolean {
-        return gamepad_native_isPressedZ()
-    }
-
-    // --- Déclarations natives ---
-    //% shim=gamepad::init
-    declare function gamepad_native_init(): void;
-    //% shim=gamepad::isPressedA
-    declare function gamepad_native_isPressedA(): boolean;
-    //% shim=gamepad::isPressedB
-    declare function gamepad_native_isPressedB(): boolean;
-    //% shim=gamepad::isPressedX
-    declare function gamepad_native_isPressedX(): boolean;
-    //% shim=gamepad::isPressedY
-    declare function gamepad_native_isPressedY(): boolean;
-    //% shim=gamepad::isPressedZ
-    declare function gamepad_native_isPressedZ(): boolean;
 }
+
+// Déclarations shim (liens vers le C++)
+//% shim=gamepad::GAMEPAD_digitalReadPin
+declare function GAMEPAD_digitalReadPin(pin: DigitalPin): number
+//% shim=gamepad::GAMEPAD_setPull
+declare function GAMEPAD_setPull(pin: DigitalPin, pull: PinPullMode): void
+//% shim=gamepad::GAMEPAD_onPulsed
+declare function GAMEPAD_onPulsed(pin: DigitalPin, pulse: PulseValue, handler: () => void): void
