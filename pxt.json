@@ -1,20 +1,22 @@
 {
-    "name": "gamepad",
-    "description": "Driver for custom gamepad with extra button Z",
-    "files": [
-        "gamepad.ts",
-        "gamepad.cpp"
-    ],
-    "public": true,
-    "dependencies": {
-        "core": "*"
-    ],
-    "testFiles": [],
-    "yotta": {},
-    "license": "MIT",
-    "simulator": {
-        "files": [
-            "sim/gamepad.ts"
-        ]
-    }
+  "name": "gamepadV4",
+  "version": "1.0.0",
+  "description": "Extension pour utiliser la manette DFRobot GamePad V4 avec le micro:bit.",
+  "license": "MIT",
+  "dependencies": {
+    "core": "*"
+  },
+  "files": [
+    "gamepad.ts",
+    "pins.ts",
+    "gamepad.cpp"
+  ],
+  "testFiles": [
+    "test.ts"
+  ],
+  "public": true,
+  "supportedTargets": [
+    "microbit"
+  ],
+  "preferredEditor": "tsprj"
 }
