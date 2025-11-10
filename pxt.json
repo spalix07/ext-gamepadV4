@@ -1,22 +1,26 @@
 {
-  "name": "gamepadV4",
-  "version": "1.0.0",
-  "description": "Extension pour utiliser la manette DFRobot GamePad V4 avec le micro:bit.",
-  "license": "MIT",
-  "dependencies": {
-    "core": "*"
-  },
-  "files": [
-    "gamepad.ts",
-    "pins.ts",
-    "gamepad.cpp"
-  ],
-  "testFiles": [
-    "test.ts"
-  ],
-  "public": true,
-  "supportedTargets": [
-    "microbit"
-  ],
-  "preferredEditor": "tsprj"
+    "name": "gamepadV4",
+    "version": "1.0.0",
+    "description": "Extension pour le GamePad V4 DFRobot (micro:bit). Gestion des boutons A–F, Z, joystick et vibreur.",
+    "license": "MIT",
+    "dependencies": {
+        "core": "*"
+    },
+    "files": [
+        "gamepadV4.ts",
+        "gamepadV4.cpp",
+        "README.md"
+    ],
+    "testFiles": [
+        "test.ts"
+    ],
+    "public": true,
+    "supportedTargets": [
+        "microbit"
+    ],
+    "targetVersions": {
+        "target": "8.0.18",
+        "targetId": "microbit"
+    },
+    "preferredEditor": "blocksprj"
 }
